@@ -5,19 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 )
-
-type MigrationConfig struct {
-	MigrationDirectory string // the path to the migration directory. Ex: ./src/migration
-	MigrationTable string // defaults to "gorm_migrations"
-}
-
-type GormMigration struct {
-	Id string
-	Name string
-	MigrationDate time.Time
-}
 
 // creates migration table if it doesn't already exist
 func create_migration_table(db_conn *sql.DB, table_name string) {
@@ -33,7 +21,7 @@ func create_migration_table(db_conn *sql.DB, table_name string) {
 	}
 }
 
-func New(db_conn *sql.DB, config MigrationConfig) {
+func New(db_conn *sql.DB, config MigrationConfig) MigrationTool {
 	if db_conn == nil {
 		panic("database connection is not defined")
 	}
@@ -42,14 +30,20 @@ func New(db_conn *sql.DB, config MigrationConfig) {
 	}
 
 	create_migration_table(db_conn, config.MigrationTable)
+	return MigrationTool{
+		DbConn: db_conn,
+		Config: config,
+	}
+}
 
+func (c *MigrationTool) RunMigration() {
 	// retrieve all rows from config.MigrationTable table
-	rows, err := db_conn.Query(fmt.Sprintf(`
+	rows, err := c.DbConn.Query(fmt.Sprintf(`
 		SELECT id, name
 		FROM "%s";
-	`, config.MigrationTable))
+	`, c.Config.MigrationTable))
 	if err != nil {
-		panic(fmt.Sprintf("could not select from %s table", config.MigrationTable))
+		panic(fmt.Sprintf("could not select from %s table", c.Config.MigrationTable))
 	}
 
 	db_migrations := []GormMigration{}
@@ -68,7 +62,7 @@ func New(db_conn *sql.DB, config MigrationConfig) {
 	rows.Close()
 
 	// get all migration files from config.MigrationDirectory directory
-	migration_files, err := os.ReadDir(config.MigrationDirectory)
+	migration_files, err := os.ReadDir(c.Config.MigrationDirectory)
 	if err != nil {
 		panic(err)
 	}
