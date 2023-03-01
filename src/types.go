@@ -7,15 +7,15 @@ import (
 
 type MigrationTool struct {
 	DbConn *sql.DB
-	Config MigrationConfig
+	Config Config
 }
 
-type MigrationConfig struct {
-	MigrationDirectory string // the path to the migration directory. Ex: ./src/migration
-	MigrationTable string // defaults to "gorm_migrations"
+type Config struct {
+	Directory string // the path to the migration directory. Ex: ./src/migration
+	TableName string // defaults to "gorm_migrations"
 }
 
-type GormMigration struct {
+type GormMigrationTable struct {
 	Id string
 	Name string
 	MigrationDate time.Time

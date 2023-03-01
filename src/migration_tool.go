@@ -21,15 +21,15 @@ func create_migration_table(db_conn *sql.DB, table_name string) {
 	}
 }
 
-func New(db_conn *sql.DB, config MigrationConfig) MigrationTool {
+func New(db_conn *sql.DB, config Config) MigrationTool {
 	if db_conn == nil {
 		panic("database connection is not defined")
 	}
-	if config.MigrationTable == "" {
-		config.MigrationTable = "gorm_migrations"
+	if config.TableName == "" {
+		config.TableName = "gorm_migrations"
 	}
 
-	create_migration_table(db_conn, config.MigrationTable)
+	create_migration_table(db_conn, config.TableName)
 	return MigrationTool{
 		DbConn: db_conn,
 		Config: config,
@@ -41,12 +41,12 @@ func (c *MigrationTool) RunMigration() {
 	rows, err := c.DbConn.Query(fmt.Sprintf(`
 		SELECT id, name
 		FROM "%s";
-	`, c.Config.MigrationTable))
+	`, c.Config.TableName))
 	if err != nil {
-		panic(fmt.Sprintf("could not select from %s table", c.Config.MigrationTable))
+		panic(fmt.Sprintf("could not select from %s table", c.Config.TableName))
 	}
 
-	db_migrations := []GormMigration{}
+	db_migrations := []GormMigrationTable{}
 	for rows.Next() {
 		var id, name string
 		err := rows.Scan(&id, &name)
@@ -54,7 +54,7 @@ func (c *MigrationTool) RunMigration() {
 			panic(err)
 		}
 		
-		db_migrations = append(db_migrations, GormMigration{
+		db_migrations = append(db_migrations, GormMigrationTable{
 			Id: id,
 			Name: name,
 		})
@@ -62,12 +62,12 @@ func (c *MigrationTool) RunMigration() {
 	rows.Close()
 
 	// get all migration files from config.MigrationDirectory directory
-	migration_files, err := os.ReadDir(c.Config.MigrationDirectory)
+	migration_files, err := os.ReadDir(c.Config.Directory)
 	if err != nil {
 		panic(err)
 	}
 
-	file_migrations := []GormMigration{}
+	file_migrations := []GormMigrationTable{}
 	for _, file := range migration_files {
 		file_name := file.Name()
 		split_file_name := strings.SplitN(file_name, "_", 2)
@@ -77,7 +77,7 @@ func (c *MigrationTool) RunMigration() {
 		raw_id := split_file_name[0]
 		raw_migration_name := split_file_name[1]
 
-		file_migrations = append(file_migrations, GormMigration{
+		file_migrations = append(file_migrations, GormMigrationTable{
 			Id: raw_id,
 			Name: raw_migration_name,
 		})
