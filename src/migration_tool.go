@@ -74,12 +74,13 @@ func (c *MigrationTool) RunMigration() {
 		if len(split_file_name) != 2 {
 			continue
 		}
-		raw_id := split_file_name[0]
-		raw_migration_name := split_file_name[1]
+		// file name format: "{id}_{migration_name}.sql"
+		id := split_file_name[0]
+		migration_name := strings.SplitN(split_file_name[1], ".", 2)[0]
 
 		file_migrations = append(file_migrations, GormMigrationTable{
-			Id: raw_id,
-			Name: raw_migration_name,
+			Id: id,
+			Name: migration_name,
 		})
 	}
 }
