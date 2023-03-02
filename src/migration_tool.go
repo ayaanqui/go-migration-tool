@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"strings"
 )
 
 // creates migration table if it doesn't already exist
@@ -67,20 +66,35 @@ func (c *MigrationTool) RunMigration() {
 		panic(err)
 	}
 
-	file_migrations := []GormMigrationTable{}
-	for _, file := range migration_files {
+	file_migrations := []ParsedFileName{}
+	for i, file := range migration_files {
 		file_name := file.Name()
-		split_file_name := strings.SplitN(file_name, "_", 2)
-		if len(split_file_name) != 2 {
+		parsed_val, err := parse_file_name(file_name)
+		if err != nil || parsed_val.FileExtension != ".sql" {
 			continue
 		}
-		// file name format: "{id}_{migration_name}.sql"
-		id := split_file_name[0]
-		migration_name := strings.SplitN(split_file_name[1], ".", 2)[0]
 
-		file_migrations = append(file_migrations, GormMigrationTable{
-			Id: id,
-			Name: migration_name,
-		})
+		id := parsed_val.Id
+		if id == db_migrations[i].Id {
+			continue
+		}
+		file_migrations = append(file_migrations, parsed_val)
+	}
+
+	for _, val := range file_migrations {
+		data, err := os.ReadFile(fmt.Sprintf("%s/%s", c.Config.Directory, val.Raw))
+		if err != nil {
+			panic(err)
+		}
+
+		tx, err := c.DbConn.Begin()
+		if err != nil {
+			panic(err)
+		}
+		tx.Exec(string(data))
+		tx.Exec(fmt.Sprintf(`
+			INSERT INTO %s (id, name) VALUES(%s, %s);
+		`, c.Config.TableName, val.Id, val.MigrationName))
+		tx.Commit()
 	}
 }

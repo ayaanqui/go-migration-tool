@@ -20,3 +20,10 @@ type GormMigrationTable struct {
 	Name string
 	MigrationDate time.Time
 }
+
+type ParsedFileName struct {
+	Id string
+	MigrationName string
+	FileExtension string
+	Raw string
+}
