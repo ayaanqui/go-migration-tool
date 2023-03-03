@@ -1,4 +1,4 @@
-package tool
+package migration_tool
 
 import (
 	"fmt"
