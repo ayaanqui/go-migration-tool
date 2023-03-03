@@ -20,7 +20,7 @@ import (
     "log"
     "net/http"
 
-    "github.com/ayaanqui/go-migration-tool/src/migration_tool"
+    "github.com/ayaanqui/go-migration-tool/migration_tool"
 )
 
 func main() {
