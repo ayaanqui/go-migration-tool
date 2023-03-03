@@ -1,4 +1,4 @@
-module github.com/ayaanqui/gorm-migration-tool
+module github.com/ayaanqui/go-migration-tool
 
 go 1.18
 

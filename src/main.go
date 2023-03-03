@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ayaanqui/gorm-migration-tool/src/tool"
+	"github.com/ayaanqui/go-migration-tool/src/tool"
 	"github.com/urfave/cli"
 )
 
