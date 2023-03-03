@@ -27,6 +27,7 @@ func New(db_conn *sql.DB, config *Config) MigrationTool {
 	if config.TableName == "" {
 		config.TableName = "gorm_migrations"
 	}
+	config.Directory = StringTrailingSlash(config.Directory)
 
 	create_migration_table(db_conn, config.TableName)
 	return MigrationTool{

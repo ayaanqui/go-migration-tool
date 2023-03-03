@@ -38,3 +38,11 @@ func parse_file_name(file_name string) (ParsedFileName, error) {
 		Raw: file_name,
 	}, nil
 }
+
+func StringTrailingSlash(path string) string {
+	path_len := len(path)
+	if path[path_len - 1] != '/' {
+		return path
+	}
+	return path[0:path_len-1]
+}
