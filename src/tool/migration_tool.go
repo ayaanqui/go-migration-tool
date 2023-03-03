@@ -1,4 +1,4 @@
-package main
+package tool
 
 import (
 	"database/sql"
@@ -20,7 +20,7 @@ func create_migration_table(db_conn *sql.DB, table_name string) {
 	}
 }
 
-func New(db_conn *sql.DB, config Config) MigrationTool {
+func New(db_conn *sql.DB, config *Config) MigrationTool {
 	if db_conn == nil {
 		panic("database connection is not defined")
 	}
@@ -97,4 +97,12 @@ func (c *MigrationTool) RunMigration() {
 		`, c.Config.TableName, val.Id, val.MigrationName))
 		tx.Commit()
 	}
+}
+
+func (c *MigrationTool) CreateMigrationFile(migration_name string) error {
+	file_name := generate_file_name(migration_name)
+	directory := c.Config.Directory
+	migration_file, err := os.Create(fmt.Sprintf("%s/%s", directory, file_name))
+	migration_file.Close()
+	return err
 }

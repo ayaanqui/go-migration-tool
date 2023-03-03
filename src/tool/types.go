@@ -1,4 +1,4 @@
-package main
+package tool
 
 import (
 	"database/sql"
@@ -7,7 +7,7 @@ import (
 
 type MigrationTool struct {
 	DbConn *sql.DB
-	Config Config
+	Config *Config
 }
 
 type Config struct {
