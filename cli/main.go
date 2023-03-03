@@ -1,15 +1,15 @@
-package main
+package cli
 
 import (
 	"log"
 	"os"
 
-	tool "github.com/ayaanqui/go-migration-tool/src/migration_tool"
+	"github.com/ayaanqui/go-migration-tool/migration_tool"
 	"github.com/urfave/cli"
 )
 
 func main() {
-	config := tool.Config{}
+	config := migration_tool.Config{}
 
 	app := &cli.App{
 		Flags: []cli.Flag{
@@ -26,12 +26,12 @@ func main() {
 				ShortName: "c",
 				Usage:     "creates a new migration file",
 				Action: func(c *cli.Context) error {
-					migration_tool := tool.MigrationTool{
+					m := migration_tool.MigrationTool{
 						Config: &config,
 					}
-					migration_tool.Config.Directory = tool.StringTrailingSlash(migration_tool.Config.Directory)
+					m.Config.Directory = migration_tool.StringTrailingSlash(m.Config.Directory)
 					migration_name := c.Args().First()
-					return migration_tool.CreateMigrationFile(migration_name)
+					return m.CreateMigrationFile(migration_name)
 				},
 			},
 		},
