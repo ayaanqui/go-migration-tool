@@ -23,7 +23,12 @@ func parse_file_name(file_name string) (ParsedFileName, error) {
 	}
 	
 	// file name format: "{id}_{migration_name}.sql"
-	id := split_file_name[0]
+	id_raw := split_file_name[0]
+	id, err := strconv.ParseUint(id_raw, 10, 64)
+	if err != nil {
+		return ParsedFileName{}, err
+	}
+	
 	split_file_name_extension := strings.SplitN(split_file_name[1], ".", 2)
 	if len(split_file_name_extension) != 2 {
 		return ParsedFileName{}, fmt.Errorf("incorrect file format")

@@ -16,13 +16,13 @@ type Config struct {
 }
 
 type GormMigrationTable struct {
-	Id string
+	Id uint64
 	Name string
 	MigrationDate time.Time
 }
 
 type ParsedFileName struct {
-	Id string
+	Id uint64
 	MigrationName string
 	FileExtension string
 	Raw string

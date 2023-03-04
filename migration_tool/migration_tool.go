@@ -4,13 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 // creates migration table if it doesn't already exist
 func create_migration_table(db_conn *sql.DB, table_name string) {
 	_, err := db_conn.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS "%s" (
-			id VARCHAR(255) NOT NULL,
+			id BIGINT NOT NULL,
 			name VARCHAR(255) NOT NULL,
 			migration_date TIMESTAMP NOT NULL DEFAULT NOW()
 		);
@@ -48,8 +49,13 @@ func (c *MigrationTool) RunMigration() {
 
 	db_migrations := []GormMigrationTable{}
 	for rows.Next() {
-		var id, name string
-		err := rows.Scan(&id, &name)
+		var id_raw, name string
+		err := rows.Scan(&id_raw, &name)
+		if err != nil {
+			panic(err)
+		}
+
+		id, err := strconv.ParseUint(id_raw, 10, 64)
 		if err != nil {
 			panic(err)
 		}
@@ -61,6 +67,11 @@ func (c *MigrationTool) RunMigration() {
 	}
 	rows.Close()
 
+	db_migration_map := map[uint64]GormMigrationTable{}
+	for _, row := range db_migrations {
+		db_migration_map[row.Id] = row
+	}
+
 	// get all migration files from config.MigrationDirectory directory
 	migration_files, err := os.ReadDir(c.Config.Directory)
 	if err != nil {
@@ -68,15 +79,14 @@ func (c *MigrationTool) RunMigration() {
 	}
 
 	file_migrations := []ParsedFileName{}
-	for i, file := range migration_files {
+	for _, file := range migration_files {
 		file_name := file.Name()
 		parsed_val, err := parse_file_name(file_name)
 		if err != nil || parsed_val.FileExtension != ".sql" {
 			continue
 		}
 
-		id := parsed_val.Id
-		if id == db_migrations[i].Id {
+		if (db_migration_map[parsed_val.Id] != GormMigrationTable{}) {
 			continue
 		}
 		file_migrations = append(file_migrations, parsed_val)
@@ -94,7 +104,7 @@ func (c *MigrationTool) RunMigration() {
 		}
 		tx.Exec(string(data))
 		tx.Exec(fmt.Sprintf(`
-			INSERT INTO %s (id, name) VALUES(%s, %s);
+			INSERT INTO %s (id, name) VALUES(%d, %s);
 		`, c.Config.TableName, val.Id, val.MigrationName))
 		tx.Commit()
 	}
