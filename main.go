@@ -29,7 +29,7 @@ func main() {
 					m := migration_tool.MigrationTool{
 						Config: &config,
 					}
-					m.Config.Directory = migration_tool.StringTrailingSlash(m.Config.Directory)
+					m.Config.Directory = migration_tool.StripTrailingSlash(m.Config.Directory)
 					migration_name := c.Args().First()
 					return m.CreateMigrationFile(migration_name)
 				},
