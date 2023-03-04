@@ -82,7 +82,7 @@ func (c *MigrationTool) RunMigration() {
 	for _, file := range migration_files {
 		file_name := file.Name()
 		parsed_val, err := parse_file_name(file_name)
-		if err != nil || parsed_val.FileExtension != ".sql" {
+		if err != nil || parsed_val.FileExtension != "sql" {
 			continue
 		}
 
@@ -104,9 +104,11 @@ func (c *MigrationTool) RunMigration() {
 		}
 		tx.Exec(string(data))
 		tx.Exec(fmt.Sprintf(`
-			INSERT INTO %s (id, name) VALUES(%d, %s);
+			INSERT INTO "%s" (id, name) VALUES(%d, '%s');
 		`, c.Config.TableName, val.Id, val.MigrationName))
-		tx.Commit()
+		if err := tx.Commit(); err != nil {
+			panic(err)
+		}
 	}
 }
 
