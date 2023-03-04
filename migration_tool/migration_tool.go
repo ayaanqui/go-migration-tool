@@ -47,7 +47,7 @@ func (c *MigrationTool) RunMigration() {
 		panic(fmt.Sprintf("could not select from %s table", c.Config.TableName))
 	}
 
-	db_migrations := []GormMigrationTable{}
+	db_migrations := map[uint64]GormMigrationTable{}
 	for rows.Next() {
 		var id_raw, name string
 		err := rows.Scan(&id_raw, &name)
@@ -59,18 +59,12 @@ func (c *MigrationTool) RunMigration() {
 		if err != nil {
 			panic(err)
 		}
-		
-		db_migrations = append(db_migrations, GormMigrationTable{
+		db_migrations[id] = GormMigrationTable{
 			Id: id,
 			Name: name,
-		})
+		}
 	}
 	rows.Close()
-
-	db_migration_map := map[uint64]GormMigrationTable{}
-	for _, row := range db_migrations {
-		db_migration_map[row.Id] = row
-	}
 
 	// get all migration files from config.MigrationDirectory directory
 	migration_files, err := os.ReadDir(c.Config.Directory)
@@ -78,22 +72,17 @@ func (c *MigrationTool) RunMigration() {
 		panic(err)
 	}
 
-	file_migrations := []ParsedFileName{}
 	for _, file := range migration_files {
 		file_name := file.Name()
 		parsed_val, err := parse_file_name(file_name)
 		if err != nil || parsed_val.FileExtension != "sql" {
 			continue
 		}
-
-		if (db_migration_map[parsed_val.Id] != GormMigrationTable{}) {
+		if (db_migrations[parsed_val.Id] != GormMigrationTable{}) {
 			continue
 		}
-		file_migrations = append(file_migrations, parsed_val)
-	}
 
-	for _, val := range file_migrations {
-		data, err := os.ReadFile(fmt.Sprintf("%s/%s", c.Config.Directory, val.Raw))
+		data, err := os.ReadFile(fmt.Sprintf("%s/%s", c.Config.Directory, parsed_val.Raw))
 		if err != nil {
 			panic(err)
 		}
@@ -105,7 +94,7 @@ func (c *MigrationTool) RunMigration() {
 		tx.Exec(string(data))
 		tx.Exec(fmt.Sprintf(`
 			INSERT INTO "%s" (id, name) VALUES(%d, '%s');
-		`, c.Config.TableName, val.Id, val.MigrationName))
+		`, c.Config.TableName, parsed_val.Id, parsed_val.MigrationName))
 		if err := tx.Commit(); err != nil {
 			panic(err)
 		}
