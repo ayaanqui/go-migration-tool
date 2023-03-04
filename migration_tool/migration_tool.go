@@ -11,7 +11,7 @@ import (
 func create_migration_table(db_conn *sql.DB, table_name string) {
 	_, err := db_conn.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS "%s" (
-			id BIGINT NOT NULL,
+			id BIGINT NOT NULL UNIQUE,
 			name VARCHAR(255) NOT NULL,
 			migration_date TIMESTAMP NOT NULL DEFAULT NOW()
 		);
