@@ -21,6 +21,12 @@ func create_migration_table(db_conn *sql.DB, table_name string) {
 	}
 }
 
+func panic_if_err(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func New(db_conn *sql.DB, config *Config) MigrationTool {
 	if db_conn == nil {
 		panic("database connection is not defined")
@@ -88,13 +94,17 @@ func (c *MigrationTool) RunMigration() {
 		}
 
 		tx, err := c.DbConn.Begin()
-		if err != nil {
-			panic(err)
-		}
-		tx.Exec(string(data))
-		tx.Exec(fmt.Sprintf(`
+		panic_if_err(err)
+
+		// Run migration file
+		_, err = tx.Exec(string(data))
+		panic_if_err(err)
+
+		_, err = tx.Exec(fmt.Sprintf(`
 			INSERT INTO "%s" (id, name) VALUES(%d, '%s');
 		`, c.Config.TableName, parsed_val.Id, parsed_val.MigrationName))
+		panic_if_err(err)
+
 		if err := tx.Commit(); err != nil {
 			panic(err)
 		}
