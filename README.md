@@ -25,7 +25,7 @@ import (
 
 func main() {
     db, err := get_db_connection() // Arbitrary function that returns an pointer to sql.DB
-    migration := migration_tool.New(raw_db_conn, &migration_tool.Config{
+    migration := migration_tool.New(db, &migration_tool.Config{
         Directory: "./migrations", // Directory which will contain all migraiton files
         TableName: "migrations", // Name of the table that will hold all successful migrations
     })
