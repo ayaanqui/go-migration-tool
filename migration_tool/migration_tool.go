@@ -88,17 +88,19 @@ func (c *MigrationTool) RunMigration() {
 			continue
 		}
 
-		data, err := os.ReadFile(fmt.Sprintf("%s/%s", c.Config.Directory, parsed_val.Raw))
+		filepath := fmt.Sprintf("%s/%s", c.Config.Directory, parsed_val.Raw)
+		data, err := os.ReadFile(filepath)
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("could not open/read \"%s\": %w", filepath, err))
 		}
 
 		tx, err := c.DbConn.Begin()
-		panic_if_err(err)
+		panic_if_err(fmt.Errorf("could not begin transaction for \"%s\": %w", filepath, err))
 
 		// Run migration file
-		_, err = tx.Exec(string(data))
-		panic_if_err(err)
+		if _, err := tx.Exec(string(data)); err != nil {
+			panic(fmt.Errorf("could not execute SQL from file \"%s\": %w", filepath, err))
+		}
 
 		_, err = tx.Exec(fmt.Sprintf(`
 			INSERT INTO "%s" (id, name) VALUES(%d, '%s');
@@ -106,7 +108,7 @@ func (c *MigrationTool) RunMigration() {
 		panic_if_err(err)
 
 		if err := tx.Commit(); err != nil {
-			panic(err)
+			panic(fmt.Errorf("could not commit transaction for \"%s\": %w", filepath, err))
 		}
 	}
 }
