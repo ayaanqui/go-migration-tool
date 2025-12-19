@@ -21,12 +21,6 @@ func create_migration_table(db_conn *sql.DB, table_name string) {
 	}
 }
 
-func panic_if_err(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func New(db_conn *sql.DB, config *Config) MigrationTool {
 	if db_conn == nil {
 		panic("database connection is not defined")
@@ -95,17 +89,26 @@ func (c *MigrationTool) RunMigration() {
 		}
 
 		tx, err := c.DbConn.Begin()
-		panic_if_err(fmt.Errorf("could not begin transaction for \"%s\": %w", filepath, err))
+		if err != nil {
+			panic(fmt.Errorf("could not begin transaction for \"%s\": %w", filepath, err))
+		}
 
 		// Run migration file
 		if _, err := tx.Exec(string(data)); err != nil {
 			panic(fmt.Errorf("could not execute SQL from file \"%s\": %w", filepath, err))
 		}
 
-		_, err = tx.Exec(fmt.Sprintf(`
-			INSERT INTO "%s" (id, name) VALUES(%d, '%s');
-		`, c.Config.TableName, parsed_val.Id, parsed_val.MigrationName))
-		panic_if_err(err)
+		_, err = tx.Exec(
+			fmt.Sprintf(
+				`INSERT INTO "%s" ("id", "name") VALUES($1, $2);`,
+				c.Config.TableName,
+			),
+			parsed_val.Id,
+			fmt.Sprintf(`'%s'`, parsed_val.MigrationName),
+		)
+		if err != nil {
+			panic(fmt.Errorf("could not create migration file entry in migration table for \"%s\": %w", filepath, err))
+		}
 
 		if err := tx.Commit(); err != nil {
 			panic(fmt.Errorf("could not commit transaction for \"%s\": %w", filepath, err))
