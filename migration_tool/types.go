@@ -15,15 +15,15 @@ type Config struct {
 	TableName string // defaults to "gorm_migrations"
 }
 
-type GormMigrationTable struct {
-	Id uint64
-	Name string
+type MigrationTable struct {
+	Id            uint64
+	Name          string
 	MigrationDate time.Time
 }
 
 type ParsedFileName struct {
-	Id uint64
+	Id            uint64
 	MigrationName string
 	FileExtension string
-	Raw string
+	Raw           string
 }

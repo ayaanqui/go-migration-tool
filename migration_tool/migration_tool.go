@@ -53,7 +53,7 @@ func (c *MigrationTool) RunMigration() {
 		panic(fmt.Sprintf("could not select from %s table", c.Config.TableName))
 	}
 
-	db_migrations := map[uint64]GormMigrationTable{}
+	db_migrations := map[uint64]MigrationTable{}
 	for rows.Next() {
 		var id_raw, name string
 		err := rows.Scan(&id_raw, &name)
@@ -65,8 +65,8 @@ func (c *MigrationTool) RunMigration() {
 		if err != nil {
 			panic(err)
 		}
-		db_migrations[id] = GormMigrationTable{
-			Id: id,
+		db_migrations[id] = MigrationTable{
+			Id:   id,
 			Name: name,
 		}
 	}
@@ -84,7 +84,7 @@ func (c *MigrationTool) RunMigration() {
 		if err != nil || parsed_val.FileExtension != "sql" {
 			continue
 		}
-		if (db_migrations[parsed_val.Id] != GormMigrationTable{}) {
+		if (db_migrations[parsed_val.Id] != MigrationTable{}) {
 			continue
 		}
 
