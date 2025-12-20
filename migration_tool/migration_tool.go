@@ -104,7 +104,7 @@ func (c *MigrationTool) RunMigration() {
 				c.Config.TableName,
 			),
 			parsed_val.Id,
-			fmt.Sprintf(`'%s'`, parsed_val.MigrationName),
+			parsed_val.MigrationName,
 		)
 		if err != nil {
 			panic(fmt.Errorf("could not create migration file entry in migration table for \"%s\": %w", filepath, err))
